@@ -62,4 +62,24 @@ router.get('/:id', verifyToken, async (req, res) => {
   }
 });
 
+router.post('/', verifyToken, async (req, res) => {
+  try {
+    const application = req.body;
+    const { applications } = getCollections();
+
+    const newApplication = {
+      ...application,
+      applicationStatus: 'pending',
+      paymentStatus: application.paymentStatus || 'unpaid',
+      applicationDate: new Date().toISOString(),
+      createdAt: new Date()
+    };
+
+    const result = await applications.insertOne(newApplication);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: 'Error creating application' });
+  }
+});
+
 export default router;
