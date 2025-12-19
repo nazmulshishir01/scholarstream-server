@@ -20,4 +20,45 @@ export const verifyToken = (req, res, next) => {
   });
 };
 
-export default verifyToken;
+
+export const verifyAdmin = async (req, res, next) => {
+  try {
+    const email = req.decoded.email;
+    const { users } = getCollections();
+    const user = await users.findOne({ email });
+    
+    if (user?.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: Admin access required' });
+    }
+    next();
+  } catch (error) {
+    res.status(500).json({ message: 'Error verifying admin role' });
+  }
+};
+
+
+export const verifyModerator = async (req, res, next) => {
+  try {
+    const email = req.decoded.email;
+    const { users } = getCollections();
+    const user = await users.findOne({ email });
+    
+    if (user?.role !== 'moderator' && user?.role !== 'admin') {
+      return res.status(403).json({ message: 'Forbidden: Moderator access required' });
+    }
+    next();
+  } catch (error) {
+    res.status(500).json({ message: 'Error verifying moderator role' });
+  }
+};
+
+
+export const verifyOwner = (req, res, next) => {
+  const tokenEmail = req.decoded.email;
+  const requestEmail = req.params.email || req.body.email;
+  
+  if (tokenEmail !== requestEmail) {
+    return res.status(403).json({ message: 'Forbidden: You can only access your own resources' });
+  }
+  next();
+};
