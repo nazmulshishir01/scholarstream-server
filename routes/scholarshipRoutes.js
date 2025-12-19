@@ -55,7 +55,7 @@ router.get('/', async (req, res) => {
 });
 
 
-// GET /scholarships - Get All with Search, Filter, Sort, Pagination
+
 router.get('/', async (req, res) => {
   try {
     const { 
@@ -71,7 +71,7 @@ router.get('/', async (req, res) => {
     const { scholarships } = getCollections();
     let query = {};
 
-    // Server-side Search
+    
     if (search) {
       query.$or = [
         { scholarshipName: { $regex: search, $options: 'i' } },
@@ -80,22 +80,39 @@ router.get('/', async (req, res) => {
       ];
     }
 
-    // Server-side Filter by category
+    
     if (category && category !== 'all') {
       query.scholarshipCategory = category;
     }
 
-    // Server-side Filter by country
+    
     if (country && country !== 'all') {
       query.universityCountry = country;
     }
 
-    // Server-side Filter by degree
+    
     if (degree && degree !== 'all') {
       query.degree = degree;
     }
 
-    // Pagination
+    
+    let sortOption = {};
+    switch (sort) {
+      case 'fees-asc':
+        sortOption = { applicationFees: 1 };
+        break;
+      case 'fees-desc':
+        sortOption = { applicationFees: -1 };
+        break;
+      case 'date-asc':
+        sortOption = { scholarshipPostDate: 1 };
+        break;
+      case 'date-desc':
+      default:
+        sortOption = { scholarshipPostDate: -1 };
+    }
+
+    
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
@@ -103,6 +120,7 @@ router.get('/', async (req, res) => {
     const total = await scholarships.countDocuments(query);
     const result = await scholarships
       .find(query)
+      .sort(sortOption)
       .skip(skip)
       .limit(limitNum)
       .toArray();
