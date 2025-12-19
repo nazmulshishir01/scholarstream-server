@@ -5,7 +5,7 @@ import { verifyToken, verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-
+// GET /users - Get All Users (Admin Only)
 router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { role, search } = req.query;
@@ -32,7 +32,7 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-
+// GET /users/:email - Get User by Email
 router.get('/:email', async (req, res) => {
   try {
     const { email } = req.params;
@@ -46,7 +46,7 @@ router.get('/:email', async (req, res) => {
   }
 });
 
-
+// GET /users/role/:email - Get User Role
 router.get('/role/:email', async (req, res) => {
   try {
     const { email } = req.params;
@@ -60,7 +60,7 @@ router.get('/role/:email', async (req, res) => {
   }
 });
 
-
+// POST /users - Create New User
 router.post('/', async (req, res) => {
   try {
     const user = req.body;
@@ -82,6 +82,66 @@ router.post('/', async (req, res) => {
   } catch (error) {
     console.error('Create User Error:', error);
     res.status(500).json({ message: 'Error creating user' });
+  }
+});
+
+// PATCH /users/:email - Update User Profile
+router.patch('/:email', verifyToken, async (req, res) => {
+  try {
+    const { email } = req.params;
+    const updates = req.body;
+    const { users } = getCollections();
+
+    delete updates.role;
+    delete updates._id;
+
+    const result = await users.updateOne(
+      { email },
+      { $set: updates }
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.error('Update User Error:', error);
+    res.status(500).json({ message: 'Error updating user' });
+  }
+});
+
+// PATCH /users/:id/role - Update User Role (Admin Only)
+router.patch('/:id/role', verifyToken, verifyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { role } = req.body;
+    const { users } = getCollections();
+
+    const validRoles = ['student', 'moderator', 'admin'];
+    if (!validRoles.includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    const result = await users.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { role } }
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.error('Update Role Error:', error);
+    res.status(500).json({ message: 'Error updating role' });
+  }
+});
+
+// DELETE /users/:id - Delete User (Admin Only)
+router.delete('/:id', verifyToken, verifyAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { users } = getCollections();
+
+    const result = await users.deleteOne({ _id: new ObjectId(id) });
+    res.json(result);
+  } catch (error) {
+    console.error('Delete User Error:', error);
+    res.status(500).json({ message: 'Error deleting user' });
   }
 });
 
