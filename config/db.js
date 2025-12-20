@@ -1,45 +1,63 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
 
-let db = null;
-let client = null;
+let cachedClient = null;
+let cachedDb = null;
 
 const connectDB = async () => {
+  if (cachedClient && cachedDb) {
+    return { client: cachedClient, db: cachedDb };
+  }
+
   try {
-    client = new MongoClient(process.env.MONGODB_URI, {
+    // TLS options added for Vercel compatibility
+    const client = new MongoClient(process.env.MONGODB_URI, {
       serverApi: {
         version: ServerApiVersion.v1,
         strict: false,
         deprecationErrors: true,
-      }
+      },
+      tls: true,
+      tlsAllowInvalidCertificates: false,
+      tlsAllowInvalidHostnames: false,
+      retryWrites: true,
+      w: 'majority',
+      maxPoolSize: 10,
+      minPoolSize: 5,
+      maxIdleTimeMS: 60000,
+      connectTimeoutMS: 10000,
+      socketTimeoutMS: 45000,
     });
 
     await client.connect();
-    db = client.db("scholarstream");
+    const db = client.db("scholarstream");
+    
+    cachedClient = client;
+    cachedDb = db;
+    
     console.log("✅ Connected to MongoDB!");
+    return { client, db };
     
   } catch (error) {
     console.error("❌ MongoDB connection error:", error);
-    process.exit(1);
+    throw error;
   }
 };
 
-
-export const getDB = () => {
-  if (!db) {
-    throw new Error('Database not initialized. Call connectDB first.');
+export const getDB = async () => {
+  if (!cachedDb) {
+    await connectDB();
   }
-  return db;
+  return cachedDb;
 };
 
-
-export const getCollections = () => {
-  const database = getDB();
+export const getCollections = async () => {
+  const db = await getDB();
   return {
-    users: database.collection("users"),
-    scholarships: database.collection("scholarships"),
-    applications: database.collection("applications"),
-    reviews: database.collection("reviews"),
-    payments: database.collection("payments")
+    users: db.collection("users"),
+    scholarships: db.collection("scholarships"),
+    applications: db.collection("applications"),
+    reviews: db.collection("reviews"),
+    payments: db.collection("payments")
   };
 };
 
