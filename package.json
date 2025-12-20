@@ -15,7 +15,7 @@
     "express",
     "mongodb"
   ],
-  "author": "Sakil",
+  "author": "Shishir",
   "license": "MIT",
   "dependencies": {
     "cors": "^2.8.5",

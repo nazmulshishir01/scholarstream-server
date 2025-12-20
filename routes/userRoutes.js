@@ -5,7 +5,7 @@ import { verifyToken, verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// GET /users - Get All Users (Admin Only)
+
 router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { role, search } = req.query;
@@ -32,7 +32,7 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-// GET /users/:email - Get User by Email
+
 router.get('/:email', async (req, res) => {
   try {
     const { email } = req.params;
@@ -46,7 +46,7 @@ router.get('/:email', async (req, res) => {
   }
 });
 
-// GET /users/role/:email - Get User Role
+
 router.get('/role/:email', async (req, res) => {
   try {
     const { email } = req.params;
@@ -60,7 +60,7 @@ router.get('/role/:email', async (req, res) => {
   }
 });
 
-// POST /users - Create New User
+
 router.post('/', async (req, res) => {
   try {
     const user = req.body;
@@ -85,7 +85,7 @@ router.post('/', async (req, res) => {
   }
 });
 
-// PATCH /users/:email - Update User Profile
+
 router.patch('/:email', verifyToken, async (req, res) => {
   try {
     const { email } = req.params;
@@ -107,7 +107,7 @@ router.patch('/:email', verifyToken, async (req, res) => {
   }
 });
 
-// PATCH /users/:id/role - Update User Role (Admin Only)
+
 router.patch('/:id/role', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
@@ -131,7 +131,7 @@ router.patch('/:id/role', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-// DELETE /users/:id - Delete User (Admin Only)
+
 router.delete('/:id', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
