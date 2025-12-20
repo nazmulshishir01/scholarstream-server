@@ -14,13 +14,13 @@ import analyticsRoutes from './routes/analyticsRoutes.js';
 const app = express();
 const port = process.env.PORT || 5000;
 
-// CORS Configuration - তোমার Firebase URL যোগ করো
+// CORS Configuration
 app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:5174',
-    'https://scholarstream-project.web.app',      // ✅ তোমার নতুন URL
-    'https://scholarstream-project.firebaseapp.com', // ✅ এটাও যোগ করো
+    'https://scholarstream-project.web.app',
+    'https://scholarstream-project.firebaseapp.com',
     'https://scholarstream-bd.web.app',
     'https://scholarstream-bd.firebaseapp.com'
   ],

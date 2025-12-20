@@ -1,57 +1,37 @@
-import { MongoClient, ServerApiVersion } from 'mongodb';
+import { MongoClient } from 'mongodb';
+
+const uri = process.env.MONGODB_URI;
 
 let cachedClient = null;
 let cachedDb = null;
 
 const connectDB = async () => {
-  if (cachedClient && cachedDb) {
-    return { client: cachedClient, db: cachedDb };
+  if (cachedDb) {
+    return cachedDb;
   }
 
   try {
-    // TLS options added for Vercel compatibility
-    const client = new MongoClient(process.env.MONGODB_URI, {
-      serverApi: {
-        version: ServerApiVersion.v1,
-        strict: false,
-        deprecationErrors: true,
-      },
-      tls: true,
-      tlsAllowInvalidCertificates: false,
-      tlsAllowInvalidHostnames: false,
-      retryWrites: true,
-      w: 'majority',
-      maxPoolSize: 10,
-      minPoolSize: 5,
-      maxIdleTimeMS: 60000,
-      connectTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-    });
-
-    await client.connect();
-    const db = client.db("scholarstream");
+    if (!cachedClient) {
+      cachedClient = new MongoClient(uri);
+      await cachedClient.connect();
+    }
     
-    cachedClient = client;
-    cachedDb = db;
-    
+    cachedDb = cachedClient.db("scholarstream");
     console.log("✅ Connected to MongoDB!");
-    return { client, db };
+    return cachedDb;
     
   } catch (error) {
-    console.error("❌ MongoDB connection error:", error);
+    console.error("❌ MongoDB connection error:", error.message);
     throw error;
   }
 };
 
 export const getDB = async () => {
-  if (!cachedDb) {
-    await connectDB();
-  }
-  return cachedDb;
+  return await connectDB();
 };
 
 export const getCollections = async () => {
-  const db = await getDB();
+  const db = await connectDB();
   return {
     users: db.collection("users"),
     scholarships: db.collection("scholarships"),

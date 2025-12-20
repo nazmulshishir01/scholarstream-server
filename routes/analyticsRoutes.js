@@ -4,19 +4,15 @@ import { verifyToken, verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-
 router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   try {
-    const { users, scholarships, applications } = getCollections();
+    const { users, scholarships, applications } = await getCollections();  // ✅ await
 
     const totalUsers = await users.countDocuments();
     const totalScholarships = await scholarships.countDocuments();
     const totalApplications = await applications.countDocuments();
 
-    const paidApplications = await applications
-      .find({ paymentStatus: 'paid' })
-      .toArray();
-    
+    const paidApplications = await applications.find({ paymentStatus: 'paid' }).toArray();
     const totalFeesCollected = paidApplications.reduce((sum, app) => {
       return sum + (app.applicationFees || 0) + (app.serviceCharge || 0);
     }, 0);
@@ -68,10 +64,9 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-
 router.get('/summary', verifyToken, verifyAdmin, async (req, res) => {
   try {
-    const { users, scholarships, applications } = getCollections();
+    const { users, scholarships, applications } = await getCollections();  // ✅ await
 
     const stats = {
       totalUsers: await users.countDocuments(),

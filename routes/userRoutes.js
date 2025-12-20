@@ -5,11 +5,10 @@ import { verifyToken, verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-
 router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { role, search } = req.query;
-    const { users } = getCollections();
+    const { users } = await getCollections();  // ✅ await
     
     let query = {};
     
@@ -32,11 +31,10 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-
 router.get('/:email', async (req, res) => {
   try {
     const { email } = req.params;
-    const { users } = getCollections();
+    const { users } = await getCollections();  // ✅ await
     
     const user = await users.findOne({ email });
     res.json(user || {});
@@ -46,11 +44,10 @@ router.get('/:email', async (req, res) => {
   }
 });
 
-
 router.get('/role/:email', async (req, res) => {
   try {
     const { email } = req.params;
-    const { users } = getCollections();
+    const { users } = await getCollections();  // ✅ await
     
     const user = await users.findOne({ email });
     res.json({ role: user?.role || 'student' });
@@ -60,11 +57,10 @@ router.get('/role/:email', async (req, res) => {
   }
 });
 
-
 router.post('/', async (req, res) => {
   try {
     const user = req.body;
-    const { users } = getCollections();
+    const { users } = await getCollections();  // ✅ await
 
     const existingUser = await users.findOne({ email: user.email });
     if (existingUser) {
@@ -85,12 +81,11 @@ router.post('/', async (req, res) => {
   }
 });
 
-
 router.patch('/:email', verifyToken, async (req, res) => {
   try {
     const { email } = req.params;
     const updates = req.body;
-    const { users } = getCollections();
+    const { users } = await getCollections();  // ✅ await
 
     delete updates.role;
     delete updates._id;
@@ -107,12 +102,11 @@ router.patch('/:email', verifyToken, async (req, res) => {
   }
 });
 
-
 router.patch('/:id/role', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { role } = req.body;
-    const { users } = getCollections();
+    const { users } = await getCollections();  // ✅ await
 
     const validRoles = ['student', 'moderator', 'admin'];
     if (!validRoles.includes(role)) {
@@ -131,11 +125,10 @@ router.patch('/:id/role', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-
 router.delete('/:id', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { users } = getCollections();
+    const { users } = await getCollections();  // ✅ await
 
     const result = await users.deleteOne({ _id: new ObjectId(id) });
     res.json(result);
