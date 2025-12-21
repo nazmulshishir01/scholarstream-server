@@ -5,7 +5,7 @@ import { verifyToken, verifyModerator } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get all reviews
+
 router.get('/', async (req, res) => {
   try {
     const { reviews } = await getCollections();
@@ -22,7 +22,7 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get reviews by scholarship ID
+
 router.get('/scholarship/:scholarshipId', async (req, res) => {
   try {
     const { scholarshipId } = req.params;
@@ -40,7 +40,7 @@ router.get('/scholarship/:scholarshipId', async (req, res) => {
   }
 });
 
-// Get reviews by user email
+
 router.get('/user/:email', verifyToken, async (req, res) => {
   try {
     const { email } = req.params;
@@ -58,7 +58,7 @@ router.get('/user/:email', verifyToken, async (req, res) => {
   }
 });
 
-// Get single review by ID
+
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
@@ -77,13 +77,13 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Create new review
+
 router.post('/', verifyToken, async (req, res) => {
   try {
     const review = req.body;
     const { reviews } = await getCollections();
 
-    // Validate rating
+    
     if (review.ratingPoint < 1 || review.ratingPoint > 5) {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
@@ -102,7 +102,7 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-// Update review
+
 router.put('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -111,7 +111,7 @@ router.put('/:id', verifyToken, async (req, res) => {
 
     delete updates._id;
 
-    // Validate rating if provided
+    
     if (updates.ratingPoint && (updates.ratingPoint < 1 || updates.ratingPoint > 5)) {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
@@ -128,7 +128,7 @@ router.put('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Delete review (by user)
+
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -142,7 +142,7 @@ router.delete('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Delete review (by moderator)
+
 router.delete('/:id/moderate', verifyToken, verifyModerator, async (req, res) => {
   try {
     const { id } = req.params;

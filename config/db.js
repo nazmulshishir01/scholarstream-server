@@ -3,15 +3,15 @@ import { MongoClient, ServerApiVersion } from 'mongodb';
 let client = null;
 let db = null;
 
-// Serverless-compatible MongoDB connection
+
 const connectDB = async () => {
-  // If already connected, return existing connection
+  
   if (db) {
     return db;
   }
 
   try {
-    // Check if MONGODB_URI exists
+    
     if (!process.env.MONGODB_URI) {
       throw new Error('MONGODB_URI environment variable is not defined');
     }
@@ -31,11 +31,11 @@ const connectDB = async () => {
     
   } catch (error) {
     console.error("❌ MongoDB connection error:", error);
-    throw error; // Don't exit, throw error for serverless
+    throw error; 
   }
 };
 
-// Get database instance (ensures connection)
+
 export const getDB = async () => {
   if (!db) {
     await connectDB();
@@ -43,7 +43,7 @@ export const getDB = async () => {
   return db;
 };
 
-// Get all collections (async for serverless)
+
 export const getCollections = async () => {
   const database = await getDB();
   return {

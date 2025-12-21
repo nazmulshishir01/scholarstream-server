@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { getCollections } from '../config/db.js';
 
-// Verify JWT Token
+
 export const verifyToken = (req, res, next) => {
   const authorization = req.headers.authorization;
   
@@ -20,11 +20,11 @@ export const verifyToken = (req, res, next) => {
   });
 };
 
-// Verify Admin Role
+
 export const verifyAdmin = async (req, res, next) => {
   try {
     const email = req.decoded.email;
-    const { users } = await getCollections(); // Added await
+    const { users } = await getCollections(); 
     const user = await users.findOne({ email });
     
     if (user?.role !== 'admin') {
@@ -37,11 +37,11 @@ export const verifyAdmin = async (req, res, next) => {
   }
 };
 
-// Verify Moderator Role
+
 export const verifyModerator = async (req, res, next) => {
   try {
     const email = req.decoded.email;
-    const { users } = await getCollections(); // Added await
+    const { users } = await getCollections(); 
     const user = await users.findOne({ email });
     
     if (user?.role !== 'moderator' && user?.role !== 'admin') {
@@ -54,7 +54,7 @@ export const verifyModerator = async (req, res, next) => {
   }
 };
 
-// Verify Resource Owner
+
 export const verifyOwner = (req, res, next) => {
   const tokenEmail = req.decoded.email;
   const requestEmail = req.params.email || req.body.email;

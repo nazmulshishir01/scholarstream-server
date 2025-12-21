@@ -5,7 +5,7 @@ import { verifyToken, verifyModerator } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get applications (filtered by role)
+
 router.get('/', verifyToken, async (req, res) => {
   try {
     const email = req.decoded.email;
@@ -15,7 +15,7 @@ router.get('/', verifyToken, async (req, res) => {
     
     let query = {};
     
-    // Students can only see their own applications
+    
     if (user?.role !== 'admin' && user?.role !== 'moderator') {
       query.userEmail = email;
     }
@@ -32,7 +32,7 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-// Get applications by user email
+
 router.get('/user/:email', verifyToken, async (req, res) => {
   try {
     const { email } = req.params;
@@ -50,7 +50,7 @@ router.get('/user/:email', verifyToken, async (req, res) => {
   }
 });
 
-// Get single application by ID
+
 router.get('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -69,7 +69,7 @@ router.get('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Create new application
+
 router.post('/', verifyToken, async (req, res) => {
   try {
     const application = req.body;
@@ -91,7 +91,7 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-// Update application
+
 router.patch('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
@@ -112,7 +112,7 @@ router.patch('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Update application status (Moderator only)
+
 router.patch('/:id/status', verifyToken, verifyModerator, async (req, res) => {
   try {
     const { id } = req.params;
@@ -141,7 +141,7 @@ router.patch('/:id/status', verifyToken, verifyModerator, async (req, res) => {
   }
 });
 
-// Add feedback to application (Moderator only)
+
 router.patch('/:id/feedback', verifyToken, verifyModerator, async (req, res) => {
   try {
     const { id } = req.params;
@@ -165,7 +165,7 @@ router.patch('/:id/feedback', verifyToken, verifyModerator, async (req, res) => 
   }
 });
 
-// Cancel/Reject application (Moderator only)
+
 router.patch('/:id/cancel', verifyToken, verifyModerator, async (req, res) => {
   try {
     const { id } = req.params;
@@ -190,7 +190,7 @@ router.patch('/:id/cancel', verifyToken, verifyModerator, async (req, res) => {
   }
 });
 
-// Delete application (only pending status)
+
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
