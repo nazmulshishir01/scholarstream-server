@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 
 const router = express.Router();
 
+
 router.post('/', async (req, res) => {
   try {
     const user = req.body;

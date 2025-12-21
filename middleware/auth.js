@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { getCollections } from '../config/db.js';
 
+
 export const verifyToken = (req, res, next) => {
   const authorization = req.headers.authorization;
   
@@ -19,10 +20,11 @@ export const verifyToken = (req, res, next) => {
   });
 };
 
+
 export const verifyAdmin = async (req, res, next) => {
   try {
     const email = req.decoded.email;
-    const { users } = await getCollections();  // ✅ await যোগ করা হয়েছে
+    const { users } = getCollections();
     const user = await users.findOne({ email });
     
     if (user?.role !== 'admin') {
@@ -34,10 +36,11 @@ export const verifyAdmin = async (req, res, next) => {
   }
 };
 
+
 export const verifyModerator = async (req, res, next) => {
   try {
     const email = req.decoded.email;
-    const { users } = await getCollections();  // ✅ await যোগ করা হয়েছে
+    const { users } = getCollections();
     const user = await users.findOne({ email });
     
     if (user?.role !== 'moderator' && user?.role !== 'admin') {
@@ -48,6 +51,7 @@ export const verifyModerator = async (req, res, next) => {
     res.status(500).json({ message: 'Error verifying moderator role' });
   }
 };
+
 
 export const verifyOwner = (req, res, next) => {
   const tokenEmail = req.decoded.email;

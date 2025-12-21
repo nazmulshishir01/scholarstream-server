@@ -1,43 +1,45 @@
-import { MongoClient } from 'mongodb';
+import { MongoClient, ServerApiVersion } from 'mongodb';
 
-const uri = process.env.MONGODB_URI;
-
-let cachedClient = null;
-let cachedDb = null;
+let db = null;
+let client = null;
 
 const connectDB = async () => {
-  if (cachedDb) {
-    return cachedDb;
-  }
-
   try {
-    if (!cachedClient) {
-      cachedClient = new MongoClient(uri);
-      await cachedClient.connect();
-    }
-    
-    cachedDb = cachedClient.db("scholarstream");
+    client = new MongoClient(process.env.MONGODB_URI, {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: false,
+        deprecationErrors: true,
+      }
+    });
+
+    await client.connect();
+    db = client.db("scholarstream");
     console.log("✅ Connected to MongoDB!");
-    return cachedDb;
     
   } catch (error) {
-    console.error("❌ MongoDB connection error:", error.message);
-    throw error;
+    console.error("❌ MongoDB connection error:", error);
+    process.exit(1);
   }
 };
 
-export const getDB = async () => {
-  return await connectDB();
+
+export const getDB = () => {
+  if (!db) {
+    throw new Error('Database not initialized. Call connectDB first.');
+  }
+  return db;
 };
 
-export const getCollections = async () => {
-  const db = await connectDB();
+
+export const getCollections = () => {
+  const database = getDB();
   return {
-    users: db.collection("users"),
-    scholarships: db.collection("scholarships"),
-    applications: db.collection("applications"),
-    reviews: db.collection("reviews"),
-    payments: db.collection("payments")
+    users: database.collection("users"),
+    scholarships: database.collection("scholarships"),
+    applications: database.collection("applications"),
+    reviews: database.collection("reviews"),
+    payments: database.collection("payments")
   };
 };
 

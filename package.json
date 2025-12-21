@@ -1,13 +1,22 @@
 {
   "name": "scholarstream-server",
   "version": "1.0.0",
-  "description": "ScholarStream - Scholarship Management Platform Backend",
+  "description": "Backend server for ScholarStream - Scholarship Management Platform",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js"
   },
+  "keywords": [
+    "scholarship",
+    "education",
+    "mern",
+    "mongodb",
+    "express"
+  ],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

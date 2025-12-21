@@ -4,19 +4,26 @@ import { verifyToken, verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
+
 router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   try {
-    const { users, scholarships, applications } = await getCollections();  // ✅ await
+    const { users, scholarships, applications, payments } = getCollections();
 
+    
     const totalUsers = await users.countDocuments();
     const totalScholarships = await scholarships.countDocuments();
     const totalApplications = await applications.countDocuments();
 
-    const paidApplications = await applications.find({ paymentStatus: 'paid' }).toArray();
+    
+    const paidApplications = await applications
+      .find({ paymentStatus: 'paid' })
+      .toArray();
+    
     const totalFeesCollected = paidApplications.reduce((sum, app) => {
       return sum + (app.applicationFees || 0) + (app.serviceCharge || 0);
     }, 0);
 
+    
     const applicationsByUniversity = await applications.aggregate([
       { $group: { _id: '$universityName', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
@@ -24,10 +31,18 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
       { $project: { name: '$_id', count: 1, _id: 0 } }
     ]).toArray();
 
+    
     const applicationsByCategory = await applications.aggregate([
       { $group: { _id: '$scholarshipCategory', count: { $sum: 1 } } },
       { $project: { name: '$_id', count: 1, _id: 0 } }
     ]).toArray();
+
+    
+    const applicationsByDegree = await applications.aggregate([
+      { $group: { _id: '$degree', count: { $sum: 1 } } },
+      { $project: { name: '$_id', count: 1, _id: 0 } }
+    ]).toArray();
+
 
     const statusCounts = {
       pending: await applications.countDocuments({ applicationStatus: 'pending' }),
@@ -36,16 +51,60 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
       rejected: await applications.countDocuments({ applicationStatus: 'rejected' })
     };
 
+    
     const userRoles = {
       student: await users.countDocuments({ role: 'student' }),
       moderator: await users.countDocuments({ role: 'moderator' }),
       admin: await users.countDocuments({ role: 'admin' })
     };
 
+    
     const paymentStatus = {
       paid: await applications.countDocuments({ paymentStatus: 'paid' }),
       unpaid: await applications.countDocuments({ paymentStatus: 'unpaid' })
     };
+
+    
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+    const monthlyApplications = await applications.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: sixMonthsAgo }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
+      {
+        $project: {
+          month: {
+            $concat: [
+              { $toString: '$_id.year' },
+              '-',
+              { $toString: '$_id.month' }
+            ]
+          },
+          count: 1,
+          _id: 0
+        }
+      }
+    ]).toArray();
+
+   
+    const recentApplications = await applications
+      .find({})
+      .sort({ applicationDate: -1 })
+      .limit(5)
+      .toArray();
 
     res.json({
       totalUsers,
@@ -54,9 +113,12 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
       totalFeesCollected,
       applicationsByUniversity,
       applicationsByCategory,
+      applicationsByDegree,
       statusCounts,
       userRoles,
-      paymentStatus
+      paymentStatus,
+      monthlyApplications,
+      recentApplications
     });
   } catch (error) {
     console.error('Analytics Error:', error);
@@ -64,9 +126,10 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
+
 router.get('/summary', verifyToken, verifyAdmin, async (req, res) => {
   try {
-    const { users, scholarships, applications } = await getCollections();  // ✅ await
+    const { users, scholarships, applications } = getCollections();
 
     const stats = {
       totalUsers: await users.countDocuments(),

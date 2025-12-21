@@ -5,10 +5,16 @@ import { verifyToken, verifyModerator } from '../middleware/auth.js';
 
 const router = express.Router();
 
+
 router.get('/', async (req, res) => {
   try {
-    const { reviews } = await getCollections();  // ✅ await
-    const result = await reviews.find({}).sort({ reviewDate: -1 }).toArray();
+    const { reviews } = getCollections();
+
+    const result = await reviews
+      .find({})
+      .sort({ reviewDate: -1 })
+      .toArray();
+
     res.json(result);
   } catch (error) {
     console.error('Get Reviews Error:', error);
@@ -16,11 +22,17 @@ router.get('/', async (req, res) => {
   }
 });
 
+
 router.get('/scholarship/:scholarshipId', async (req, res) => {
   try {
     const { scholarshipId } = req.params;
-    const { reviews } = await getCollections();  // ✅ await
-    const result = await reviews.find({ scholarshipId }).sort({ reviewDate: -1 }).toArray();
+    const { reviews } = getCollections();
+
+    const result = await reviews
+      .find({ scholarshipId })
+      .sort({ reviewDate: -1 })
+      .toArray();
+
     res.json(result);
   } catch (error) {
     console.error('Get Scholarship Reviews Error:', error);
@@ -28,11 +40,17 @@ router.get('/scholarship/:scholarshipId', async (req, res) => {
   }
 });
 
+
 router.get('/user/:email', verifyToken, async (req, res) => {
   try {
     const { email } = req.params;
-    const { reviews } = await getCollections();  // ✅ await
-    const result = await reviews.find({ userEmail: email }).sort({ reviewDate: -1 }).toArray();
+    const { reviews } = getCollections();
+
+    const result = await reviews
+      .find({ userEmail: email })
+      .sort({ reviewDate: -1 })
+      .toArray();
+
     res.json(result);
   } catch (error) {
     console.error('Get User Reviews Error:', error);
@@ -40,11 +58,33 @@ router.get('/user/:email', verifyToken, async (req, res) => {
   }
 });
 
+
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { reviews } = getCollections();
+
+    const review = await reviews.findOne({ _id: new ObjectId(id) });
+    
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+
+    res.json(review);
+  } catch (error) {
+    console.error('Get Review Error:', error);
+    res.status(500).json({ message: 'Error fetching review' });
+  }
+});
+
+
+
 router.post('/', verifyToken, async (req, res) => {
   try {
     const review = req.body;
-    const { reviews } = await getCollections();  // ✅ await
+    const { reviews } = getCollections();
 
+    
     if (review.ratingPoint < 1 || review.ratingPoint > 5) {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
@@ -54,6 +94,7 @@ router.post('/', verifyToken, async (req, res) => {
       reviewDate: new Date().toISOString(),
       createdAt: new Date()
     };
+
     const result = await reviews.insertOne(newReview);
     res.json(result);
   } catch (error) {
@@ -62,13 +103,17 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
+
 router.put('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    const { reviews } = await getCollections();  // ✅ await
+    const { reviews } = getCollections();
+
+    
     delete updates._id;
 
+    
     if (updates.ratingPoint && (updates.ratingPoint < 1 || updates.ratingPoint > 5)) {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
@@ -77,6 +122,7 @@ router.put('/:id', verifyToken, async (req, res) => {
       { _id: new ObjectId(id) },
       { $set: { ...updates, updatedAt: new Date() } }
     );
+
     res.json(result);
   } catch (error) {
     console.error('Update Review Error:', error);
@@ -84,10 +130,12 @@ router.put('/:id', verifyToken, async (req, res) => {
   }
 });
 
+
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { reviews } = await getCollections();  // ✅ await
+    const { reviews } = getCollections();
+
     const result = await reviews.deleteOne({ _id: new ObjectId(id) });
     res.json(result);
   } catch (error) {
@@ -96,10 +144,12 @@ router.delete('/:id', verifyToken, async (req, res) => {
   }
 });
 
+
 router.delete('/:id/moderate', verifyToken, verifyModerator, async (req, res) => {
   try {
     const { id } = req.params;
-    const { reviews } = await getCollections();  // ✅ await
+    const { reviews } = getCollections();
+
     const result = await reviews.deleteOne({ _id: new ObjectId(id) });
     res.json(result);
   } catch (error) {

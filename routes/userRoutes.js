@@ -5,16 +5,19 @@ import { verifyToken, verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
+
 router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { role, search } = req.query;
-    const { users } = await getCollections();  // ✅ await
+    const { users } = getCollections();
     
     let query = {};
+    
     
     if (role && role !== 'all') {
       query.role = role;
     }
+    
     
     if (search) {
       query.$or = [
@@ -31,10 +34,11 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
+
 router.get('/:email', async (req, res) => {
   try {
     const { email } = req.params;
-    const { users } = await getCollections();  // ✅ await
+    const { users } = getCollections();
     
     const user = await users.findOne({ email });
     res.json(user || {});
@@ -44,10 +48,11 @@ router.get('/:email', async (req, res) => {
   }
 });
 
+
 router.get('/role/:email', async (req, res) => {
   try {
     const { email } = req.params;
-    const { users } = await getCollections();  // ✅ await
+    const { users } = getCollections();
     
     const user = await users.findOne({ email });
     res.json({ role: user?.role || 'student' });
@@ -57,16 +62,19 @@ router.get('/role/:email', async (req, res) => {
   }
 });
 
+
 router.post('/', async (req, res) => {
   try {
     const user = req.body;
-    const { users } = await getCollections();  // ✅ await
+    const { users } = getCollections();
 
+    
     const existingUser = await users.findOne({ email: user.email });
     if (existingUser) {
       return res.json({ message: 'User already exists', insertedId: null });
     }
 
+    
     const newUser = {
       ...user,
       role: 'student',
@@ -81,12 +89,15 @@ router.post('/', async (req, res) => {
   }
 });
 
+
+
 router.patch('/:email', verifyToken, async (req, res) => {
   try {
     const { email } = req.params;
     const updates = req.body;
-    const { users } = await getCollections();  // ✅ await
+    const { users } = getCollections();
 
+   
     delete updates.role;
     delete updates._id;
 
@@ -102,12 +113,14 @@ router.patch('/:email', verifyToken, async (req, res) => {
   }
 });
 
+
 router.patch('/:id/role', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { role } = req.body;
-    const { users } = await getCollections();  // ✅ await
+    const { users } = getCollections();
 
+    
     const validRoles = ['student', 'moderator', 'admin'];
     if (!validRoles.includes(role)) {
       return res.status(400).json({ message: 'Invalid role' });
@@ -125,10 +138,11 @@ router.patch('/:id/role', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
+
 router.delete('/:id', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { users } = await getCollections();  // ✅ await
+    const { users } = getCollections();
 
     const result = await users.deleteOne({ _id: new ObjectId(id) });
     res.json(result);
