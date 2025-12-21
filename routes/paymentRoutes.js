@@ -7,7 +7,7 @@ import { verifyToken } from '../middleware/auth.js';
 const router = express.Router();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-
+// Create payment intent
 router.post('/create-payment-intent', verifyToken, async (req, res) => {
   try {
     const { amount } = req.body;
@@ -16,7 +16,7 @@ router.post('/create-payment-intent', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Invalid amount' });
     }
 
-    
+    // Convert to cents
     const amountInCents = Math.round(amount * 100);
 
     const paymentIntent = await stripe.paymentIntents.create({
@@ -32,11 +32,11 @@ router.post('/create-payment-intent', verifyToken, async (req, res) => {
   }
 });
 
-
+// Save payment record
 router.post('/', verifyToken, async (req, res) => {
   try {
     const payment = req.body;
-    const { payments, applications } = getCollections();
+    const { payments, applications } = await getCollections();
 
     const newPayment = {
       ...payment,
@@ -44,10 +44,10 @@ router.post('/', verifyToken, async (req, res) => {
       createdAt: new Date()
     };
 
-    
+    // Save payment
     const result = await payments.insertOne(newPayment);
 
-    
+    // Update application payment status
     if (payment.applicationId) {
       await applications.updateOne(
         { _id: new ObjectId(payment.applicationId) },
@@ -68,11 +68,11 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-
+// Get payments by user email
 router.get('/user/:email', verifyToken, async (req, res) => {
   try {
     const { email } = req.params;
-    const { payments } = getCollections();
+    const { payments } = await getCollections();
 
     const result = await payments
       .find({ email })
@@ -86,11 +86,11 @@ router.get('/user/:email', verifyToken, async (req, res) => {
   }
 });
 
-
+// Get payment by ID
 router.get('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { payments } = getCollections();
+    const { payments } = await getCollections();
 
     const payment = await payments.findOne({ _id: new ObjectId(id) });
     
@@ -105,11 +105,11 @@ router.get('/:id', verifyToken, async (req, res) => {
   }
 });
 
-
+// Get payment by transaction ID
 router.get('/transaction/:transactionId', verifyToken, async (req, res) => {
   try {
     const { transactionId } = req.params;
-    const { payments } = getCollections();
+    const { payments } = await getCollections();
 
     const payment = await payments.findOne({ transactionId });
     

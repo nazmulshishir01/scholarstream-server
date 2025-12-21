@@ -5,10 +5,10 @@ import { verifyToken, verifyModerator } from '../middleware/auth.js';
 
 const router = express.Router();
 
-
+// Get all reviews
 router.get('/', async (req, res) => {
   try {
-    const { reviews } = getCollections();
+    const { reviews } = await getCollections();
 
     const result = await reviews
       .find({})
@@ -22,11 +22,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-
+// Get reviews by scholarship ID
 router.get('/scholarship/:scholarshipId', async (req, res) => {
   try {
     const { scholarshipId } = req.params;
-    const { reviews } = getCollections();
+    const { reviews } = await getCollections();
 
     const result = await reviews
       .find({ scholarshipId })
@@ -40,11 +40,11 @@ router.get('/scholarship/:scholarshipId', async (req, res) => {
   }
 });
 
-
+// Get reviews by user email
 router.get('/user/:email', verifyToken, async (req, res) => {
   try {
     const { email } = req.params;
-    const { reviews } = getCollections();
+    const { reviews } = await getCollections();
 
     const result = await reviews
       .find({ userEmail: email })
@@ -58,11 +58,11 @@ router.get('/user/:email', verifyToken, async (req, res) => {
   }
 });
 
-
+// Get single review by ID
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { reviews } = getCollections();
+    const { reviews } = await getCollections();
 
     const review = await reviews.findOne({ _id: new ObjectId(id) });
     
@@ -77,14 +77,13 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-
-
+// Create new review
 router.post('/', verifyToken, async (req, res) => {
   try {
     const review = req.body;
-    const { reviews } = getCollections();
+    const { reviews } = await getCollections();
 
-    
+    // Validate rating
     if (review.ratingPoint < 1 || review.ratingPoint > 5) {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
@@ -103,17 +102,16 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-
+// Update review
 router.put('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    const { reviews } = getCollections();
+    const { reviews } = await getCollections();
 
-    
     delete updates._id;
 
-    
+    // Validate rating if provided
     if (updates.ratingPoint && (updates.ratingPoint < 1 || updates.ratingPoint > 5)) {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
@@ -130,11 +128,11 @@ router.put('/:id', verifyToken, async (req, res) => {
   }
 });
 
-
+// Delete review (by user)
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { reviews } = getCollections();
+    const { reviews } = await getCollections();
 
     const result = await reviews.deleteOne({ _id: new ObjectId(id) });
     res.json(result);
@@ -144,11 +142,11 @@ router.delete('/:id', verifyToken, async (req, res) => {
   }
 });
 
-
+// Delete review (by moderator)
 router.delete('/:id/moderate', verifyToken, verifyModerator, async (req, res) => {
   try {
     const { id } = req.params;
-    const { reviews } = getCollections();
+    const { reviews } = await getCollections();
 
     const result = await reviews.deleteOne({ _id: new ObjectId(id) });
     res.json(result);

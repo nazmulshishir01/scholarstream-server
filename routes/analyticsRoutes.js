@@ -4,17 +4,17 @@ import { verifyToken, verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-
+// Get full analytics (Admin only)
 router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   try {
-    const { users, scholarships, applications, payments } = getCollections();
+    const { users, scholarships, applications, payments } = await getCollections();
 
-    
+    // Basic counts
     const totalUsers = await users.countDocuments();
     const totalScholarships = await scholarships.countDocuments();
     const totalApplications = await applications.countDocuments();
 
-    
+    // Total fees collected
     const paidApplications = await applications
       .find({ paymentStatus: 'paid' })
       .toArray();
@@ -23,7 +23,7 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
       return sum + (app.applicationFees || 0) + (app.serviceCharge || 0);
     }, 0);
 
-    
+    // Applications by university
     const applicationsByUniversity = await applications.aggregate([
       { $group: { _id: '$universityName', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
@@ -31,19 +31,19 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
       { $project: { name: '$_id', count: 1, _id: 0 } }
     ]).toArray();
 
-    
+    // Applications by category
     const applicationsByCategory = await applications.aggregate([
       { $group: { _id: '$scholarshipCategory', count: { $sum: 1 } } },
       { $project: { name: '$_id', count: 1, _id: 0 } }
     ]).toArray();
 
-    
+    // Applications by degree
     const applicationsByDegree = await applications.aggregate([
       { $group: { _id: '$degree', count: { $sum: 1 } } },
       { $project: { name: '$_id', count: 1, _id: 0 } }
     ]).toArray();
 
-
+    // Status counts
     const statusCounts = {
       pending: await applications.countDocuments({ applicationStatus: 'pending' }),
       processing: await applications.countDocuments({ applicationStatus: 'processing' }),
@@ -51,20 +51,20 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
       rejected: await applications.countDocuments({ applicationStatus: 'rejected' })
     };
 
-    
+    // User roles count
     const userRoles = {
       student: await users.countDocuments({ role: 'student' }),
       moderator: await users.countDocuments({ role: 'moderator' }),
       admin: await users.countDocuments({ role: 'admin' })
     };
 
-    
+    // Payment status
     const paymentStatus = {
       paid: await applications.countDocuments({ paymentStatus: 'paid' }),
       unpaid: await applications.countDocuments({ paymentStatus: 'unpaid' })
     };
 
-    
+    // Monthly applications (last 6 months)
     const sixMonthsAgo = new Date();
     sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
@@ -99,7 +99,7 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
       }
     ]).toArray();
 
-   
+    // Recent applications
     const recentApplications = await applications
       .find({})
       .sort({ applicationDate: -1 })
@@ -126,10 +126,10 @@ router.get('/', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-
+// Get summary stats (Admin only)
 router.get('/summary', verifyToken, verifyAdmin, async (req, res) => {
   try {
-    const { users, scholarships, applications } = getCollections();
+    const { users, scholarships, applications } = await getCollections();
 
     const stats = {
       totalUsers: await users.countDocuments(),

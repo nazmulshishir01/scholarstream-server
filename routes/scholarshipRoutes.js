@@ -5,7 +5,7 @@ import { verifyToken, verifyAdmin } from '../middleware/auth.js';
 
 const router = express.Router();
 
-
+// Get all scholarships with search, filter, sort, pagination
 router.get('/', async (req, res) => {
   try {
     const { 
@@ -18,10 +18,10 @@ router.get('/', async (req, res) => {
       limit = 9 
     } = req.query;
     
-    const { scholarships } = getCollections();
+    const { scholarships } = await getCollections();
     let query = {};
 
-    
+    // Search
     if (search) {
       query.$or = [
         { scholarshipName: { $regex: search, $options: 'i' } },
@@ -30,22 +30,22 @@ router.get('/', async (req, res) => {
       ];
     }
 
-    
+    // Filter by category
     if (category && category !== 'all') {
       query.scholarshipCategory = category;
     }
 
-    
+    // Filter by country
     if (country && country !== 'all') {
       query.universityCountry = country;
     }
 
-    
+    // Filter by degree
     if (degree && degree !== 'all') {
       query.degree = degree;
     }
 
-    
+    // Sort options
     let sortOption = {};
     switch (sort) {
       case 'fees-asc':
@@ -62,12 +62,11 @@ router.get('/', async (req, res) => {
         sortOption = { scholarshipPostDate: -1 };
     }
 
-   
+    // Pagination
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
     const skip = (pageNum - 1) * limitNum;
 
-    
     const total = await scholarships.countDocuments(query);
     const result = await scholarships
       .find(query)
@@ -88,10 +87,10 @@ router.get('/', async (req, res) => {
   }
 });
 
-
+// Get top 6 scholarships
 router.get('/top', async (req, res) => {
   try {
-    const { scholarships } = getCollections();
+    const { scholarships } = await getCollections();
     
     const result = await scholarships
       .find({})
@@ -106,10 +105,10 @@ router.get('/top', async (req, res) => {
   }
 });
 
-
+// Get filter categories
 router.get('/categories', async (req, res) => {
   try {
-    const { scholarships } = getCollections();
+    const { scholarships } = await getCollections();
 
     const categories = await scholarships.distinct('scholarshipCategory');
     const countries = await scholarships.distinct('universityCountry');
@@ -123,11 +122,11 @@ router.get('/categories', async (req, res) => {
   }
 });
 
-
+// Get single scholarship by ID
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { scholarships } = getCollections();
+    const { scholarships } = await getCollections();
 
     const scholarship = await scholarships.findOne({ _id: new ObjectId(id) });
     
@@ -142,11 +141,11 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-
+// Get related scholarships
 router.get('/related/:category/:id', async (req, res) => {
   try {
     const { category, id } = req.params;
-    const { scholarships } = getCollections();
+    const { scholarships } = await getCollections();
 
     const result = await scholarships
       .find({
@@ -163,11 +162,11 @@ router.get('/related/:category/:id', async (req, res) => {
   }
 });
 
-
+// Create new scholarship (Admin only)
 router.post('/', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const scholarship = req.body;
-    const { scholarships } = getCollections();
+    const { scholarships } = await getCollections();
 
     const newScholarship = {
       ...scholarship,
@@ -184,14 +183,13 @@ router.post('/', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-
+// Update scholarship (Admin only)
 router.put('/:id', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const scholarship = req.body;
-    const { scholarships } = getCollections();
+    const { scholarships } = await getCollections();
 
-    
     delete scholarship._id;
 
     const result = await scholarships.updateOne(
@@ -206,11 +204,11 @@ router.put('/:id', verifyToken, verifyAdmin, async (req, res) => {
   }
 });
 
-
+// Delete scholarship (Admin only)
 router.delete('/:id', verifyToken, verifyAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { scholarships } = getCollections();
+    const { scholarships } = await getCollections();
 
     const result = await scholarships.deleteOne({ _id: new ObjectId(id) });
     res.json(result);

@@ -1,10 +1,21 @@
 import { MongoClient, ServerApiVersion } from 'mongodb';
 
-let db = null;
 let client = null;
+let db = null;
 
+// Serverless-compatible MongoDB connection
 const connectDB = async () => {
+  // If already connected, return existing connection
+  if (db) {
+    return db;
+  }
+
   try {
+    // Check if MONGODB_URI exists
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI environment variable is not defined');
+    }
+
     client = new MongoClient(process.env.MONGODB_URI, {
       serverApi: {
         version: ServerApiVersion.v1,
@@ -16,24 +27,25 @@ const connectDB = async () => {
     await client.connect();
     db = client.db("scholarstream");
     console.log("✅ Connected to MongoDB!");
+    return db;
     
   } catch (error) {
     console.error("❌ MongoDB connection error:", error);
-    process.exit(1);
+    throw error; // Don't exit, throw error for serverless
   }
 };
 
-
-export const getDB = () => {
+// Get database instance (ensures connection)
+export const getDB = async () => {
   if (!db) {
-    throw new Error('Database not initialized. Call connectDB first.');
+    await connectDB();
   }
   return db;
 };
 
-
-export const getCollections = () => {
-  const database = getDB();
+// Get all collections (async for serverless)
+export const getCollections = async () => {
+  const database = await getDB();
   return {
     users: database.collection("users"),
     scholarships: database.collection("scholarships"),

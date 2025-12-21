@@ -5,16 +5,17 @@ import { verifyToken, verifyModerator } from '../middleware/auth.js';
 
 const router = express.Router();
 
+// Get applications (filtered by role)
 router.get('/', verifyToken, async (req, res) => {
   try {
     const email = req.decoded.email;
-    const { users, applications } = getCollections();
+    const { users, applications } = await getCollections();
     
     const user = await users.findOne({ email });
     
     let query = {};
     
-    
+    // Students can only see their own applications
     if (user?.role !== 'admin' && user?.role !== 'moderator') {
       query.userEmail = email;
     }
@@ -31,11 +32,11 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
-
+// Get applications by user email
 router.get('/user/:email', verifyToken, async (req, res) => {
   try {
     const { email } = req.params;
-    const { applications } = getCollections();
+    const { applications } = await getCollections();
 
     const result = await applications
       .find({ userEmail: email })
@@ -49,11 +50,11 @@ router.get('/user/:email', verifyToken, async (req, res) => {
   }
 });
 
-
+// Get single application by ID
 router.get('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { applications } = getCollections();
+    const { applications } = await getCollections();
 
     const application = await applications.findOne({ _id: new ObjectId(id) });
     
@@ -68,11 +69,11 @@ router.get('/:id', verifyToken, async (req, res) => {
   }
 });
 
-
+// Create new application
 router.post('/', verifyToken, async (req, res) => {
   try {
     const application = req.body;
-    const { applications } = getCollections();
+    const { applications } = await getCollections();
 
     const newApplication = {
       ...application,
@@ -90,14 +91,13 @@ router.post('/', verifyToken, async (req, res) => {
   }
 });
 
-
+// Update application
 router.patch('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    const { applications } = getCollections();
+    const { applications } = await getCollections();
 
-    
     delete updates._id;
 
     const result = await applications.updateOne(
@@ -112,14 +112,13 @@ router.patch('/:id', verifyToken, async (req, res) => {
   }
 });
 
-
+// Update application status (Moderator only)
 router.patch('/:id/status', verifyToken, verifyModerator, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const { applications } = getCollections();
+    const { applications } = await getCollections();
 
-    
     const validStatuses = ['pending', 'processing', 'completed', 'rejected'];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({ message: 'Invalid status' });
@@ -142,12 +141,12 @@ router.patch('/:id/status', verifyToken, verifyModerator, async (req, res) => {
   }
 });
 
-
+// Add feedback to application (Moderator only)
 router.patch('/:id/feedback', verifyToken, verifyModerator, async (req, res) => {
   try {
     const { id } = req.params;
     const { feedback } = req.body;
-    const { applications } = getCollections();
+    const { applications } = await getCollections();
 
     const result = await applications.updateOne(
       { _id: new ObjectId(id) },
@@ -166,12 +165,12 @@ router.patch('/:id/feedback', verifyToken, verifyModerator, async (req, res) => 
   }
 });
 
-
+// Cancel/Reject application (Moderator only)
 router.patch('/:id/cancel', verifyToken, verifyModerator, async (req, res) => {
   try {
     const { id } = req.params;
     const { reason } = req.body;
-    const { applications } = getCollections();
+    const { applications } = await getCollections();
 
     const result = await applications.updateOne(
       { _id: new ObjectId(id) },
@@ -191,13 +190,12 @@ router.patch('/:id/cancel', verifyToken, verifyModerator, async (req, res) => {
   }
 });
 
-
+// Delete application (only pending status)
 router.delete('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
-    const { applications } = getCollections();
+    const { applications } = await getCollections();
 
-  
     const application = await applications.findOne({ _id: new ObjectId(id) });
     
     if (!application) {

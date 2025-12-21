@@ -14,6 +14,7 @@ import analyticsRoutes from './routes/analyticsRoutes.js';
 const app = express();
 const port = process.env.PORT || 5000;
 
+// CORS configuration
 app.use(cors({
   origin: [
     'http://localhost:5173',
@@ -25,9 +26,18 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Database connection middleware - connects before handling any request
+app.use(async (req, res, next) => {
+  try {
+    await connectDB();
+    next();
+  } catch (error) {
+    console.error('Database connection failed:', error);
+    res.status(500).json({ message: 'Database connection failed' });
+  }
+});
 
-connectDB();
-
+// Routes
 app.use('/jwt', authRoutes);
 app.use('/users', userRoutes);
 app.use('/scholarships', scholarshipRoutes);
@@ -36,29 +46,28 @@ app.use('/reviews', reviewRoutes);
 app.use('/payments', paymentRoutes);
 app.use('/analytics', analyticsRoutes);
 
-
-app.post('/create-payment-intent', (req, res, next) => {
-  
-  req.url = '/create-payment-intent';
-  paymentRoutes(req, res, next);
-});
-
-
+// Root route
 app.get('/', (req, res) => {
   res.send('🎓 ScholarStream Server is Running!');
 });
 
+// 404 handler
 app.use((req, res) => {
   res.status(404).json({ message: 'Route not found' });
 });
 
-
+// Error handler
 app.use((err, req, res, next) => {
   console.error('❌ Error:', err.message);
   res.status(500).json({ message: 'Internal server error' });
 });
 
+// Only listen in development (not in serverless)
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(port, () => {
+    console.log(`🚀 ScholarStream Server is running on port ${port}`);
+  });
+}
 
-app.listen(port, () => {
-  console.log(`🚀 ScholarStream Server is running on port ${port}`);
-});
+// Export for Vercel serverless
+export default app;
